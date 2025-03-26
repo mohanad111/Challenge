@@ -1,0 +1,61 @@
+# This advanced workflow automatically analyzes code for vulnerabilities in multiple languages.
+# It is optimized for speed, scalability, and customizability. 
+#
+# ******** IMPORTANT ********
+# We have detected the languages in your repository. Verify the language matrix below to ensure the correct set of supported CodeQL languages.
+
+name: "CodeQL Advanced Analysis"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '36 19 * * 6'
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    # Selecting appropriate runners for your codebase. Swift requires macOS, others default to Ubuntu.
+    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+    permissions:
+      security-events: write  # Required for CodeQL vulnerability events
+      packages: read          # Required to fetch internal or private CodeQL packs
+      actions: read           # Required for private repositories
+      contents: read          # Required to access repository contents
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: actions
+          build-mode: none
+        - language: javascript-typescript
+          build-mode: none
+        # You can extend the matrix with other supported languages (e.g., c-cpp, python, ruby)
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initialize CodeQL for scanning
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # Customize your CodeQL queries (refer to docs for advanced configuration)
+          # queries: security-extended, security-and-quality
+
+      # If custom build steps are required (for compiled languages), configure them here.
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          echo "Custom build required for ${matrix.language}. Replace this step with your build commands, e.g., 'make bootstrap'."
+          exit 1
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
