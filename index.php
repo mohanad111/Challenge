@@ -9,5 +9,6 @@
 <h2 align=center>点击图片开始你的XSS之旅吧！</h2>
 </body>
 </html>
+password:12345
 
 
